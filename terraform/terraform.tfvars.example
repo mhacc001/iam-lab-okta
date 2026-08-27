@@ -1,0 +1,3 @@
+okta_org_name  = "dev-12345"
+okta_base_url  = "okta.com"
+okta_api_token = "00abc...your-token..."
