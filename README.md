@@ -1,77 +1,75 @@
-# IAM Lab (Okta)
+# Okta Workforce IAM Lab: Attribute-Driven RBAC and JML Automation
 
-A workforce identity lab built on a free Okta Integrator (developer) org. It
-models a small company's identity program: role-based access through groups,
-automated joiner-mover-leaver (JML) lifecycle, MFA enforcement, and access
-reviews.
+A workforce identity program for a small company, written as code for Okta. Terraform builds the directory model, group rules, apps and policies. Python scripts run the joiner-mover-leaver (JML) lifecycle and export an access review against the Okta API.
 
-Everything here runs on the free Okta developer tier. No cost.
+**Author:** Marie Haccandy, M.S. Cybersecurity Management · [LinkedIn](https://www.linkedin.com/in/marie-christine-haccandy-24b6b21ba) · [GitHub](https://github.com/mhacc001)
 
-## What it models
+## The design in one rule
 
-| Area | Implementation |
-|---|---|
-| Directory | Users in departments: Engineering, Sales, Contractors, IT |
-| RBAC | Access granted by group membership, never directly to a user |
-| Group rules | Department attribute drives group assignment automatically |
-| App access | An OIDC app assigned to groups, not individuals |
-| Authentication | Sign-on policy: MFA required, stronger factor for Contractors |
-| Password policy | Length, history, lockout thresholds |
-| JML automation | Python scripts for onboard / move / offboard against the Okta API |
-| Access review | Script that exports "who has access to what" for a quarterly review |
+**No access is ever granted directly to a user.** A user's `department` attribute places them in groups through Okta group rules, and apps are assigned only to groups. As a result:
 
-## Setup
+| Lifecycle event | What an admin does | What happens |
+|---|---|---|
+| Joiner | Create the user with a department | Group rules add the right groups. Apps follow the groups. |
+| Mover | Change the department | Old groups and apps fall away, new ones attach. The script logs the difference. |
+| Leaver | Deactivate | Every group and app is removed at once. The account is kept in DEPROVISIONED state for audit. |
+| Access review | Run one script | Exports who has access to what as CSV. A query, not an investigation. |
 
-1. Sign up at developer.okta.com (free). You get an org URL like `dev-12345.okta.com`.
-2. Create an API token: Security > API > Tokens > Create Token. Copy it.
-3. Configure Terraform:
+Why rules instead of manual group assignment: manual assignments drift and rarely get removed. Rules re-evaluate every time the attribute changes, so the access model stays explicit and auditable. Full rationale: [docs/rbac-model.md](docs/rbac-model.md).
+
+## What the code builds
+
+| Area | Implementation | File |
+|---|---|---|
+| Groups | Engineering, Sales, IT, Contractors, plus All Staff | [terraform/main.tf](terraform/main.tf) |
+| Group rules | `user.department == "<dept>"` per department, `user.status == "ACTIVE"` for All Staff | [terraform/main.tf](terraform/main.tf) |
+| Apps | Two OIDC apps (Internal Portal for All Staff, Engineering Tools for Engineering), assigned to groups only | [terraform/main.tf](terraform/main.tf) |
+| Authentication | MFA enrollment required for All Staff (password, email, Okta Verify) in Terraform; a stricter Contractor policy is designed in the policy doc | [terraform/main.tf](terraform/main.tf), [docs/mfa-policy.md](docs/mfa-policy.md) |
+| Password policy | 12-character minimum, history of 8, lockout after 5 attempts | [terraform/main.tf](terraform/main.tf) |
+| JML automation | `onboard`, `move`, `offboard` commands that print groups and apps added or removed | [scripts/jml.py](scripts/jml.py) |
+| Access review | CSV export of every user's status, groups and apps | [scripts/access_review.py](scripts/access_review.py) |
+
+Step-by-step lifecycle flows: [docs/jml-flows.md](docs/jml-flows.md).
+
+## Deploy it
+
+Runs on a free Okta Integrator (developer) org.
 
 ```bash
+# 1. Build the identity model
 cd terraform
-cp terraform.tfvars.example terraform.tfvars   # add org name + base url + api token
-terraform init
-terraform apply
-```
+cp terraform.tfvars.example terraform.tfvars   # org name, base URL, API token
+terraform init && terraform apply
 
-This creates the groups, group rules, users, OIDC app, and policies.
-
-## JML automation
-
-```bash
-cd scripts
-export OKTA_ORG_URL="https://dev-12345.okta.com"
+# 2. Run the lifecycle
+cd ../scripts
+export OKTA_ORG_URL="https://dev-XXXXX.okta.com"
 export OKTA_API_TOKEN="..."
 python3 -m pip install -r requirements.txt
 
 python3 jml.py onboard  --first Ada --last Lovelace --dept Engineering --email ada@example.com
 python3 jml.py move     --email ada@example.com --new-dept Sales
 python3 jml.py offboard --email ada@example.com
-python3 access_review.py > ../docs/access-review-$(date +%Y%m%d).csv
+python3 access_review.py > access-review.csv
 ```
 
-- **onboard**: creates the user, sets the department attribute, lets the group
-  rule place them, activates the account
-- **move**: changes the department attribute, forces group-rule re-evaluation,
-  logs the access that was added and removed
-- **offboard**: deactivates the user, clears sessions, removes group memberships,
-  leaves an audit record
+Example mover output:
 
-## What to capture for your portfolio
+```
+[mover] ada@example.com: Engineering -> Sales
+[mover] groups added:   ['Sales']
+[mover] groups removed: ['Engineering']
+[mover] apps added:     []
+[mover] apps removed:   ['Engineering Tools']
+```
 
-Fill in [`docs/RUNBOOK.md`](docs/RUNBOOK.md) as you go: screenshots of the group
-rules, a before/after of a mover's app access, the access-review CSV, and the
-Okta system log entries showing the lifecycle events. That evidence is what makes
-this a portfolio project instead of a tutorial.
+How to verify each step in the Okta admin console: [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
-## Design docs
+## Related work
 
-- [`docs/rbac-model.md`](docs/rbac-model.md) — the group and access model, and why
-- [`docs/jml-flows.md`](docs/jml-flows.md) — joiner/mover/leaver step by step
-- [`docs/mfa-policy.md`](docs/mfa-policy.md) — the authentication policy rationale
+- [identity-governance-lab](https://github.com/mhacc001/identity-governance-lab): SCIM 2.0 provisioning, access certification campaigns, separation-of-duties checks and non-human identity audits
+- [it-jml-toolkit](https://github.com/mhacc001/it-jml-toolkit): the same lifecycle in PowerShell against Microsoft Entra ID through Microsoft Graph
 
-## Honesty note
+## Tools
 
-This is a lab on a developer org, not production experience. Describe it that way.
-The real talking point is that you can explain and implement least-privilege
-group design, lifecycle automation, and access reviews, backed by your actual
-access-administration work at Innovate Springfield.
+Okta · Terraform (okta provider) · Python · Okta Management API · OIDC · MFA policy · RBAC · joiner-mover-leaver · access review

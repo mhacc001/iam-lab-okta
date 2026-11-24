@@ -1,46 +1,49 @@
-# Runbook — fill this in as you build
+# Runbook: Deploy and Verify
 
-The portfolio value of this project is the evidence here, not the code.
+How to stand the lab up on a free Okta Integrator org and confirm each control works. Each step names the console screen or System Log event that proves it.
 
-## 1. Setup done
+## 1. Build
 
-- [ ] Okta developer org created: `dev-_____.okta.com`
-- [ ] `terraform apply` succeeded
-- [ ] Screenshot: Directory > Groups showing the 5 groups
-- [ ] Screenshot: Directory > Group Rules showing the ACTIVE rules
+1. Create an API token: **Security > API > Tokens > Create Token**.
+2. Fill in `terraform/terraform.tfvars` from the example file, then run `terraform init && terraform apply`.
+3. Verify:
+   - **Directory > Groups** shows All Staff, Engineering, Sales, IT and Contractors.
+   - **Directory > Group Rules** shows `auto-all-staff` and one `auto-<dept>` rule per department, all ACTIVE.
+   - **Applications** shows Internal Portal (assigned to All Staff) and Engineering Tools (assigned to Engineering). Neither has direct user assignments.
 
 ## 2. Joiner
 
-- [ ] Ran `jml.py onboard` for a test user
-- [ ] Paste the script output here:
-  ```
-  ```
-- [ ] Screenshot: the new user's Groups tab
-- [ ] Screenshot: System Log filtered to that user, showing membership adds
+Run `python3 jml.py onboard --first Ada --last Lovelace --dept Engineering --email ada@example.com`.
+
+Verify:
+- The user's **Groups** tab lists All Staff and Engineering.
+- **Reports > System Log**, filtered to the user, shows `group.user_membership.add` events with the group rule as the actor.
 
 ## 3. Mover
 
-- [ ] Ran `jml.py move` to change department
-- [ ] Paste the added/removed diff:
-  ```
-  ```
-- [ ] Screenshot: System Log showing membership remove then add, seconds apart
+Run `python3 jml.py move --email ada@example.com --new-dept Sales`.
+
+Verify:
+- The script output shows Engineering removed, Sales added and Engineering Tools revoked.
+- The System Log shows `group.user_membership.remove` followed by `group.user_membership.add` within seconds, with no admin action in between.
 
 ## 4. Leaver
 
-- [ ] Ran `jml.py offboard`
-- [ ] Paste output:
-  ```
-  ```
-- [ ] Screenshot: user in DEPROVISIONED state, Groups tab empty
+Run `python3 jml.py offboard --email ada@example.com`.
+
+Verify:
+- The user status is **DEPROVISIONED** and the Groups tab is empty.
+- The System Log shows `user.lifecycle.deactivate`, and the user has no active sessions.
 
 ## 5. Access review
 
-- [ ] Ran `access_review.py`, saved CSV to `docs/access-review-YYYYMMDD.csv`
-- [ ] One paragraph: what you would flag in this review and why
+Run `python3 access_review.py > access-review.csv`.
 
-## 6. Reflection (interview prep)
+What to flag in a review:
+- Any row with an app but no group. That means a direct assignment, which breaks the model.
+- Contractors with access to anything beyond the Internal Portal.
+- DEPROVISIONED users who still appear with groups or apps.
 
-- What broke or surprised you:
-- What you would do differently in production:
-- The 60-second version of this project you can say out loud:
+## 6. Tear down
+
+Run `terraform destroy` to remove everything the lab created.
