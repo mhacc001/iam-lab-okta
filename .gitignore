@@ -8,3 +8,5 @@ __pycache__/
 *.pyc
 docs/access-review-*.csv
 .env
+*.tfplan
+*.log

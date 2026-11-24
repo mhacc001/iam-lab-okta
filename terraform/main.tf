@@ -50,7 +50,9 @@ resource "okta_group_rule" "all_staff" {
   status            = "ACTIVE"
   group_assignments = [okta_group.all_staff.id]
   expression_type   = "urn:okta:expression:1.0"
-  expression_value  = "user.status == \"ACTIVE\""
+  # Okta group rules only evaluate ACTIVE users, so "has a department" = "every active employee".
+  # (user.status cannot be used inside a group-rule expression.)
+  expression_value  = "user.department != null"
 }
 
 # ---------------------------------------------------------------------------
@@ -116,6 +118,9 @@ resource "okta_policy_password" "standard" {
   password_history_count       = 8
   password_max_lockout_attempts = 5
   password_lockout_notification_channels = ["EMAIL"]
+  # Recovery by email only: security questions are weak and disabled in this org.
+  email_recovery    = "ACTIVE"
+  question_recovery = "INACTIVE"
   groups_included  = [okta_group.all_staff.id]
 }
 
@@ -128,8 +133,9 @@ resource "okta_policy_mfa" "require_mfa" {
   description = "MFA required for all authenticated access."
   is_oie      = true
 
+  # Email stays a recovery-only factor in this org, so enrollment requires
+  # a knowledge factor plus a possession factor (Okta Verify).
   okta_password = { enroll = "REQUIRED" }
-  okta_email    = { enroll = "REQUIRED" }
   okta_verify   = { enroll = "REQUIRED" }
 
   groups_included = [okta_group.all_staff.id]

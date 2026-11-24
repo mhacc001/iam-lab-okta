@@ -32,7 +32,7 @@ Verify:
 Run `python3 jml.py offboard --email ada@example.com`.
 
 Verify:
-- The user status is **DEPROVISIONED** and the Groups tab is empty.
+- The script clears `department` first, so the group rules remove every rule-managed group. The user status is **DEPROVISIONED** and the Groups tab shows only Everyone. Okta keeps memberships on a deactivated user, so clearing the attribute is what actually removes access.
 - The System Log shows `user.lifecycle.deactivate`, and the user has no active sessions.
 
 ## 5. Access review

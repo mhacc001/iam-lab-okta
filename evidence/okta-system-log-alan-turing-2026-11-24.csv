@@ -1,0 +1,19 @@
+timestamp_utc,event_type,actor,target,outcome
+2026-11-24T08:20:18,user.mfa.factor.activate,Okta admin (lab owner),alan.turing@example.com,SUCCESS
+2026-11-24T08:20:18,user.lifecycle.create,Okta admin (lab owner),alan.turing@example.com,SUCCESS
+2026-11-24T08:20:18,user.lifecycle.activate,Okta admin (lab owner),alan.turing@example.com,SUCCESS
+2026-11-24T08:20:18,group.user_membership.add,Okta System,Engineering,SUCCESS
+2026-11-24T08:20:18,group.user_membership.add,Okta System,All Staff,SUCCESS
+2026-11-24T08:20:19,application.user_membership.add,Okta System,OpenID Connect Client,SUCCESS
+2026-11-24T08:20:19,application.user_membership.add,Okta System,OpenID Connect Client,SUCCESS
+2026-11-24T08:20:30,user.account.update_profile,Okta admin (lab owner),alan.turing@example.com,SUCCESS
+2026-11-24T08:20:30,group.user_membership.add,Okta System,Sales,SUCCESS
+2026-11-24T08:20:30,group.user_membership.remove,Okta System,Engineering,SUCCESS
+2026-11-24T08:20:30,application.user_membership.remove,Okta System,OpenID Connect Client / Engineering,SUCCESS
+2026-11-24T08:20:41,user.account.update_profile,Okta admin (lab owner),alan.turing@example.com,SUCCESS
+2026-11-24T08:20:41,group.user_membership.remove,Okta System,Sales,SUCCESS
+2026-11-24T08:20:41,group.user_membership.remove,Okta System,All Staff,SUCCESS
+2026-11-24T08:20:41,application.user_membership.remove,Okta System,OpenID Connect Client / All Staff,SUCCESS
+2026-11-24T08:20:50,user.lifecycle.deactivate,Okta admin (lab owner),alan.turing@example.com,SUCCESS
+2026-11-24T08:20:50,user.session.clear,Okta admin (lab owner),alan.turing@example.com,SUCCESS
+2026-11-24T08:20:50,user.session.clear,Okta admin (lab owner),alan.turing@example.com,SUCCESS

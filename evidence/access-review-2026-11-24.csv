@@ -1,0 +1,23 @@
+user_email,user_status,group,app
+katherine@example.com,PROVISIONED,Everyone,
+katherine@example.com,PROVISIONED,All Staff,
+katherine@example.com,PROVISIONED,Engineering,
+katherine@example.com,PROVISIONED,,Engineering Tools
+katherine@example.com,PROVISIONED,,Internal Portal
+mary@example.com,PROVISIONED,Everyone,
+mary@example.com,PROVISIONED,All Staff,
+mary@example.com,PROVISIONED,Sales,
+mary@example.com,PROVISIONED,,Internal Portal
+grace@example.com,PROVISIONED,Everyone,
+grace@example.com,PROVISIONED,All Staff,
+grace@example.com,PROVISIONED,Engineering,
+grace@example.com,PROVISIONED,,Engineering Tools
+grace@example.com,PROVISIONED,,Internal Portal
+external@vendor.example,PROVISIONED,Everyone,
+external@vendor.example,PROVISIONED,All Staff,
+external@vendor.example,PROVISIONED,Contractors,
+external@vendor.example,PROVISIONED,,Internal Portal
+dorothy@example.com,PROVISIONED,Everyone,
+dorothy@example.com,PROVISIONED,All Staff,
+dorothy@example.com,PROVISIONED,IT,
+dorothy@example.com,PROVISIONED,,Internal Portal

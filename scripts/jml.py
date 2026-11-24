@@ -50,7 +50,10 @@ def groups_for(user_id):
 
 
 def apps_for(user_id):
-    return {a["label"] for a in api("GET", f"/users/{user_id}/appLinks")}
+    # Apps the user is assigned to (directly or through a group). appLinks only
+    # lists dashboard tiles, which are empty for users who have not signed in yet.
+    flt = urllib.parse.quote(f'user.id eq "{user_id}"')
+    return {a["label"] for a in api("GET", f"/apps?filter={flt}")}
 
 
 def wait_for_rules():
@@ -96,17 +99,26 @@ def move(args):
 def offboard(args):
     user = find_user(args.email)
     uid = user["id"]
-    had_g = sorted(groups_for(uid))
-    had_a = sorted(apps_for(uid))
+    had_g = groups_for(uid)
+    had_a = apps_for(uid)
+    # Okta keeps group memberships on a deactivated user. Clearing the
+    # department first makes the group rules drop every rule-managed group
+    # (and the apps that come with them) before the account is deactivated.
+    api("POST", f"/users/{uid}", {"profile": {"department": None}})
+    wait_for_rules()
     api("POST", f"/users/{uid}/lifecycle/deactivate", None)
     # clear any live sessions
     try:
         api("DELETE", f"/users/{uid}/sessions", None)
     except SystemExit:
         pass
-    print(f"[leaver] deactivated {args.email}")
-    print(f"[leaver] removed from groups: {had_g}")
-    print(f"[leaver] revoked app access:  {had_a}")
+    left_g = groups_for(uid)
+    left_a = apps_for(uid)
+    print(f"[leaver] department cleared, then deactivated {args.email}")
+    print(f"[leaver] groups removed:    {sorted(had_g - left_g)}")
+    print(f"[leaver] apps revoked:      {sorted(had_a - left_a)}")
+    print(f"[leaver] groups remaining:  {sorted(left_g)}  (Everyone is built in and cannot be removed)")
+    print(f"[leaver] apps remaining:    {sorted(left_a)}")
     print(f"[leaver] audit: user retained in DEPROVISIONED state for review")
 
 

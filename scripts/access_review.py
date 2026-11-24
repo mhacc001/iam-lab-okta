@@ -10,6 +10,7 @@ import csv
 import json
 import os
 import sys
+import urllib.parse
 import urllib.request
 import urllib.error
 
@@ -47,7 +48,8 @@ def main():
         email = u["profile"].get("email", "")
         status = u["status"]
         groups = [g["profile"]["name"] for g in api(f"/users/{uid}/groups")]
-        apps = [a["label"] for a in api(f"/users/{uid}/appLinks")]
+        flt = urllib.parse.quote(f'user.id eq "{uid}"')
+        apps = [a["label"] for a in api(f"/apps?filter={flt}")]
         if not groups and not apps:
             w.writerow([email, status, "", ""])
         for g in groups:

@@ -1,0 +1,20 @@
+$ python3 jml.py onboard --first Alan --last Turing --dept Engineering --email alan.turing@example.com
+[joiner] created alan.turing@example.com id=00u1a8rmzrakJB1RB698 department=Engineering
+[joiner] groups now: ['All Staff', 'Engineering', 'Everyone']
+[joiner] app access: ['Engineering Tools', 'Internal Portal']
+
+$ python3 jml.py move --email alan.turing@example.com --new-dept Sales
+[mover] alan.turing@example.com: Engineering -> Sales
+[mover] groups added:   ['Sales']
+[mover] groups removed: ['Engineering']
+[mover] apps added:     []
+[mover] apps removed:   ['Engineering Tools']
+
+$ python3 jml.py offboard --email alan.turing@example.com
+[leaver] department cleared, then deactivated alan.turing@example.com
+[leaver] groups removed:    ['All Staff', 'Sales']
+[leaver] apps revoked:      ['Internal Portal']
+[leaver] groups remaining:  ['Everyone']  (Everyone is built in and cannot be removed)
+[leaver] apps remaining:    []
+[leaver] audit: user retained in DEPROVISIONED state for review
+
